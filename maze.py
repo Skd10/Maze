@@ -1,9 +1,9 @@
 from pygame.locals import *
 import pygame
-block_size = 100
+block_size = 45
 def show_text(_image_surf):
     global block_size
-    X = 300
+    X = 600
     Y = 100
     white = (255, 255, 255) 
     green = (0, 255, 0) 
@@ -54,7 +54,7 @@ class Maze:
 
     def draw(self,display_surf,image_surf):
        global block_size
-       block_size -= 0.1
+       block_size -= 0.01
     #    self._block_surf = pygame.transform.scale(self._block_surf, (int(block_size), int(block_size)))
     #    image_surf = pygame.transform.scale(image_surf, (int(45), int(45)))
 
@@ -68,7 +68,7 @@ class Maze:
            if bx > self.M-1:
                bx = 0 
                by = by + 1
-       show_text(display_surf)
+
 
 class App:
  
@@ -88,7 +88,6 @@ class App:
         global block_size
         w = self.windowWidth
         h = self.windowHeight
-        block_size = w*0.1
         pygame.init()
         self._display_surf = pygame.display.set_mode((self.windowWidth,self.windowHeight), pygame.HWSURFACE)
         
@@ -96,8 +95,8 @@ class App:
         self._running = True
         self._image_surf = pygame.image.load("Green_Block.png").convert()
         self._block_surf = pygame.image.load("wooden_Block.jpg").convert()
-        self._block_surf = pygame.transform.scale(self._block_surf, (int(block_size), int(block_size)))
-        self._image_surf = pygame.transform.scale(self._image_surf, (int(45), int(45)))
+        self._block_surf = pygame.transform.scale(self._block_surf, (int(45), int(45)))
+        self._image_surf = pygame.transform.scale(self._image_surf, (int(block_size), int(block_size)))
 
     def on_event(self, event):
         if event.type == QUIT:
@@ -108,6 +107,7 @@ class App:
     
     def on_render(self):
         self._display_surf.fill((0,0,0))
+        self._image_surf = pygame.transform.scale(self._image_surf, (int(33), int(33)))
         self._display_surf.blit(self._image_surf,(self.player.x,self.player.y))
         # self._display_surf = pygame.transform.scale(self._display_surf, (40, 40))
         # self._image_surf = pygame.transform.scale(self._display_surf, (int(45), int(45)))
