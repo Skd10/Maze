@@ -23,26 +23,53 @@ def show_text(_image_surf):
         pygame.display.update()
 
 class Player:
-    x = 10
-    y = 10
+    global theApp
+    x = 60
+    y = 60
     speed = 1
+    arrows = {"left": False, "right": False, "up": False, "down": False}
  
     def moveRight(self):
-        self.x = self.x + self.speed
- 
+        if not any([self.arrows["right"], self.arrows["down"], self.arrows["left"], self.arrows["up"]]):
+            self.arrows["right"] = True
+            # if theApp.check_impact():
+            #     self.x = self.x - self.speed - 10
+            # else:
+            #     self.x = self.x + self.speed
+            # self.arrows["right"] = False
+
     def moveLeft(self):
-        self.x = self.x - self.speed
+        if not any([self.arrows["left"], self.arrows["down"], self.arrows["right"], self.arrows["up"]]):
+            self.arrows["left"] = True
+            # if theApp.check_impact():
+            #     self.x = self.x + self.speed + 10
+            # else:
+            #     self.x = self.x - self.speed
+            # self.arrows["left"] = False
  
     def moveUp(self):
-        self.y = self.y - self.speed
+        if not any([self.arrows["up"], self.arrows["down"], self.arrows["right"], self.arrows["left"]]):
+            self.arrows["up"] = True
+            # if theApp.check_impact():
+            #     self.y = self.y + self.speed + 10
+            # else:
+            #     self.y = self.y - self.speed
+            # self.arrows["up"] = False
  
     def moveDown(self):
-        self.y = self.y + self.speed
+        if not any([self.arrows["down"], self.arrows["left"], self.arrows["right"], self.arrows["up"]]):
+            self.arrows["down"] = True
+            # if theApp.check_impact():
+            #     self.y = self.y - self.speed - 10
+            # else:
+            #     self.y = self.y + self.speed
+            # self.arrows["down"] = False
  
 class Maze:
     def __init__(self):
        self.M = 10
        self.N = 8
+       self.maze_blocks = []
        self.maze = [ 1,1,1,1,1,1,1,1,1,1,
                      1,0,0,0,0,0,0,0,0,1,
                      1,0,0,0,0,0,0,0,0,1,
@@ -51,23 +78,23 @@ class Maze:
                      1,0,1,0,1,1,1,1,0,1,
                      1,0,0,0,0,0,0,0,0,1,
                      1,1,1,1,1,1,1,1,1,1,]
+       self.create_blocks()
+
+    def create_blocks(self):
+        bx = 0
+        by = 0
+        for i in range(0,self.M*self.N):
+            if self.maze[ bx + (by*self.M) ] == 1:
+                self.maze_blocks.append([bx * 44 , by * 44])
+            bx = bx + 1
+            if bx > self.M-1:
+                bx = 0 
+                by = by + 1
+
 
     def draw(self,display_surf,image_surf):
-       global block_size
-       block_size -= 0.01
-    #    self._block_surf = pygame.transform.scale(self._block_surf, (int(block_size), int(block_size)))
-    #    image_surf = pygame.transform.scale(image_surf, (int(45), int(45)))
-
-       bx = 0
-       by = 0
-       for i in range(0,self.M*self.N):
-           if self.maze[ bx + (by*self.M) ] == 1:
-               display_surf.blit(image_surf,( bx * 44 , by * 44))
-
-           bx = bx + 1
-           if bx > self.M-1:
-               bx = 0 
-               by = by + 1
+       for block in self.maze_blocks:
+           display_surf.blit(image_surf,( block[0] , block[1]))
 
 
 class App:
@@ -83,8 +110,22 @@ class App:
         self.player = Player()
         self.maze = Maze()
 
- 
+    def check_impact(self, top, right, bottom, left):
+        for block in self.maze.maze_blocks:
+            block_left = block[0]
+            block_right = block[0] + 45
+            block_top = block[1]
+            block_bottom = block[1] + 45
+            left = self.player.x
+            right = self.player.x + 33
+            top = self.player.y
+            bottom = self.player.y + 33
+            if (block_right > right > block_left) or (block_right > left > block_left):
+                if (block_top < top < block_bottom) or (block_top < bottom < block_bottom):
+                    return True
+
     def on_init(self):
+        speed = self.player.speed
         global block_size
         w = self.windowWidth
         h = self.windowHeight
@@ -103,8 +144,40 @@ class App:
             self._running = False
  
     def on_loop(self):
-        pass
-    
+        speed = self.player.speed
+        if self.player.arrows ["up"] and not any([self.player.arrows["down"],self.player.arrows["right"],self.player.arrows["left"]]):
+            potential_top = self.player.y - speed
+            potential_bottom = self.player.y + 33 - speed
+            potential_left = self.player.x
+            potential_right = self.player.x + 33
+            # check for impact
+            if not self.check_impact(potential_top, potential_right, potential_bottom, potential_left):
+                self.player.y -= speed
+        if self.player.arrows ["down"] and not any([self.player.arrows["up"],self.player.arrows["right"],self.player.arrows["left"]]):
+            potential_top = self.player.y + speed
+            potential_bottom = self.player.y + 33 + speed
+            potential_left = self.player.x
+            potential_right = self.player.x + 33
+            # check for impact
+            if not self.check_impact(potential_top, potential_right, potential_bottom, potential_left):
+                self.player.y += speed
+        if self.player.arrows ["right"] and not any([self.player.arrows["down"],self.player.arrows["up"],self.player.arrows["left"]]):
+            potential_top = self.player.y
+            potential_bottom = self.player.y + 33
+            potential_left = self.player.x + speed
+            potential_right = self.player.x + 33 + speed
+            # check for impact
+            if not self.check_impact(potential_top, potential_right, potential_bottom, potential_left):
+                self.player.x += speed
+        if self.player.arrows ["left"] and not any([self.player.arrows["down"],self.player.arrows["right"],self.player.arrows["up"]]):
+            potential_top = self.player.y
+            potential_bottom = self.player.y + 33
+            potential_left = self.player.x - speed
+            potential_right = self.player.x + 33 - speed
+            # check for impact
+            if not self.check_impact(potential_top, potential_right, potential_bottom, potential_left):
+                self.player.x -= speed
+
     def on_render(self):
         self._display_surf.fill((0,0,0))
         self._image_surf = pygame.transform.scale(self._image_surf, (int(33), int(33)))
@@ -127,15 +200,23 @@ class App:
             
             if (keys[K_RIGHT]):
                 self.player.moveRight()
+            else:
+                self.player.arrows["right"] = False
  
             if (keys[K_LEFT]):
                 self.player.moveLeft()
+            else:
+                self.player.arrows["left"] = False
  
             if (keys[K_UP]):
                 self.player.moveUp()
+            else:
+                self.player.arrows["up"] = False
  
             if (keys[K_DOWN]):
                 self.player.moveDown()
+            else:
+                self.player.arrows["down"] = False
  
             if (keys[K_ESCAPE]):
                 self._running = False
